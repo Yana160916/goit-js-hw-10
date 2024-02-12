@@ -1,7 +1,5 @@
 import flatpickr from 'flatpickr';
 import iziToast from 'izitoast';
-import 'izitoast/dist/css/iziToast.min.css';
-import 'flatpickr/dist/flatpickr.min.css';
 
 const targetDate = new Date('2024-12-31T23:59:59');
 let userSelectedDate;
