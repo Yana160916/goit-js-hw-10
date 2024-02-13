@@ -1,39 +1,41 @@
-// Описаний у документації
 import iziToast from "izitoast";
-// Додатковий імпорт стилів
 import "izitoast/dist/css/iziToast.min.css";
 
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector('.form');
 
-document.getElementById('myForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
 
-    const delay = document.getElementById('delayInput').value;
-    const option = document.querySelector('input[name="option"]:checked').value;
+        const delayInput = document.querySelector('input[name="delay"]');
+        const stateInputs = document.querySelectorAll('input[name="state"]');
+        
+        const delay = parseInt(delayInput.value);
 
-    const promise = new Promise((resolve, reject) => {
-        if (option === 'fulfilled') {
-            setTimeout(() => resolve(delay), delay);
-        } else {
-            setTimeout(() => reject(delay), delay);
+        const selectedStateInput = Array.from(stateInputs).find(input => input.checked);
+
+        if (selectedStateInput) {
+            const state = selectedStateInput.value;
+
+            const promise = new Promise((resolve, reject) => {
+                if (state === 'fulfilled') {
+                    setTimeout(() => resolve(delay), delay);
+                } else {
+                    setTimeout(() => reject(delay), delay);
+                }
+            });
+
+            promise.then((result) => {
+                iziToast.success({
+                    title: 'Success',
+                    message: `✅ Fulfilled promise in ${result}ms`
+                });
+            }).catch((result) => {
+                iziToast.error({
+                    title: 'Error',
+                    message: `❌ Rejected promise in ${result}ms`
+                });
+            });
         }
     });
-
-    promise.then(
-        (result) => {
-            // Виводить повідомлення за допомогою iziToast
-            iziToast.success({
-                title: 'Fulfilled Promise',
-                message: `✅ Fulfilled promise in ${result}ms`,
-                position: 'topRight',
-            });
-        },
-        (reason) => {
-            // Виводить повідомлення за допомогою iziToast
-            iziToast.error({
-                title: 'Rejected Promise',
-                message: `❌ Rejected promise in ${reason}ms`,
-                position: 'topRight',
-            });
-        }
-    );
 });

@@ -1,15 +1,9 @@
-let userSelectedDate;
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
+import iziToast from "izitoast";
+import "izitoast/dist/css/iziToast.min.css";
 
-function addLeadingZero(value) {
-  return value.toString().padStart(2, '0');
-}
-
-
-function updateTimerDisplay(time) {
-  const timerElement = document.getElementById('timer');
-  timerElement.textContent = `${addLeadingZero(time.days)}:${addLeadingZero(time.hours)}:${addLeadingZero(time.minutes)}:${addLeadingZero(time.seconds)}`;
-}
-
+// Функція для підрахунку часу в об'єкті {days, hours, minutes, seconds}
 function convertMs(ms) {
   const second = 1000;
   const minute = second * 60;
@@ -24,51 +18,64 @@ function convertMs(ms) {
   return { days, hours, minutes, seconds };
 }
 
-console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
-console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
-console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
-
-
-function startTimer() {
-  const startBtn = document.getElementById('startBtn');
-  const datepicker = document.getElementById('datepicker');
-  const selectedDate = new Date(userSelectedDate).getTime();
-  const currentDate = new Date().getTime();
-
-  if (selectedDate <= currentDate) {
-    window.alert('Please choose a date in the future');
-    startBtn.disabled = true;
-    return;
-  }
-
-  startBtn.disabled = true;
-  datepicker.disabled = true;
-
-  const interval = setInterval(() => {
-    const now = new Date().getTime();
-    const remainingTime = selectedDate - now;
-
-    if (remainingTime <= 0) {
-      clearInterval(interval);
-      updateTimerDisplay({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      startBtn.disabled = false;
-      datepicker.disabled = false;
-    } else {
-      const timeObject = convertMs(remainingTime);
-      updateTimerDisplay(timeObject);
-    }
-  }, 1000);
+// Функція для додавання ведучого нуля
+function addLeadingZero(value) {
+  return value < 10 ? `0${value}` : value;
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+  let userSelectedDate;
 
-const options = {
-  enableTime: true,
-  time_24hr: true,
-  defaultDate: new Date(),
-  minuteIncrement: 1,
-  onClose(selectedDates) {
-    console.log(selectedDates[0]);
-  },
-};
+  const datetimePicker = document.getElementById('datetime-picker');
+  const startButton = document.querySelector('[data-start]');
 
-flatpickr("#datetime-picker", options);
+  // Конфігурація flatpickr
+  const options = {
+    enableTime: true,
+    time_24hr: true,
+    defaultDate: new Date(),
+    minuteIncrement: 1,
+    onClose(selectedDates) {
+      userSelectedDate = selectedDates[0];
+
+      if (userSelectedDate < new Date()) {
+        iziToast.warning({
+          title: 'Warning',
+          message: 'Please choose a date in the future'
+        });
+
+        startButton.disabled = true;
+      } else {
+        startButton.disabled = false;
+      }
+    },
+  };
+
+  flatpickr(datetimePicker, options);
+
+  startButton.addEventListener('click', function () {
+    if (userSelectedDate) {
+      startButton.disabled = true;
+      
+      const interval = setInterval(function () {
+        const currentDate = new Date();
+        const timeDifference = userSelectedDate - currentDate;
+
+        if (timeDifference <= 0) {
+          clearInterval(interval);
+          iziToast.success({
+            title: 'Success',
+            message: 'Countdown has ended!'
+          });
+        } else {
+          const { days, hours, minutes, seconds } = convertMs(timeDifference);
+
+          document.querySelector('[data-days]').textContent = addLeadingZero(days);
+          document.querySelector('[data-hours]').textContent = addLeadingZero(hours);
+          document.querySelector('[data-minutes]').textContent = addLeadingZero(minutes);
+          document.querySelector('[data-seconds]').textContent = addLeadingZero(seconds);
+        }
+      }, 1000);
+    }
+  });
+});
